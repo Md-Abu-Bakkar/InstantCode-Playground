@@ -3,21 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>InstantCode - Real-time Editor & Link Generator</title>
+    <title>CodeLab - Instant Code Sharing</title>
     
-    <script src='//whephiwums.com/sdk.js' data-zone='9117784' data-sdk='show_9117784'></script>
-    
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap');
+    <!-- Compression Library -->
+    <script src="https://cdn.jsdelivr.net/npm/lz-string@1.4.4/libs/lz-string.min.js"></script>
 
+    <style>
         :root {
-            --primary: #FF6B6B;
-            --secondary: #4ECDC4;
-            --background: #1A1A1A;
+            --primary: #00adb5;
+            --background: #1a1a1a;
+            --editor-bg: #2d2d2d;
         }
 
         body {
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             background: var(--background);
             color: white;
             margin: 0;
@@ -30,37 +29,31 @@
             margin: 0 auto;
         }
 
-        h1 {
-            color: var(--primary);
-            text-align: center;
-            margin: 30px 0;
-        }
-
-        .editor-section {
+        .editor-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20px;
-            margin-top: 20px;
+            height: 70vh;
         }
 
         textarea {
             width: 100%;
-            height: 400px;
-            background: #2D2D2D;
+            height: 100%;
+            background: var(--editor-bg);
             color: white;
-            border: 2px solid #3D3D3D;
+            border: 2px solid #3d3d3d;
             padding: 15px;
             border-radius: 8px;
             resize: none;
-            font-family: 'Courier New', monospace;
+            font-family: 'Fira Code', monospace;
             font-size: 14px;
         }
 
-        .preview-box {
+        .preview-container {
             background: white;
             border-radius: 8px;
             overflow: hidden;
-            height: 500px;
+            position: relative;
         }
 
         iframe {
@@ -81,145 +74,137 @@
             color: white;
             border: none;
             padding: 12px 25px;
-            border-radius: 25px;
+            border-radius: 5px;
             cursor: pointer;
-            transition: transform 0.3s;
-            font-weight: 500;
+            transition: opacity 0.3s;
         }
 
         button:hover {
-            transform: translateY(-2px);
+            opacity: 0.9;
         }
 
-        .link-section {
-            margin-top: 30px;
+        .link-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: var(--editor-bg);
+            border-radius: 8px;
             text-align: center;
         }
 
         #generatedLink {
-            color: var(--secondary);
+            color: var(--primary);
             word-break: break-all;
-            margin: 15px auto;
-            max-width: 800px;
-            padding: 10px;
-            border: 2px dashed var(--secondary);
-            border-radius: 8px;
-        }
-
-        .footer {
-            margin-top: 50px;
-            text-align: center;
-            color: #666;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>⚡ InstantCode Playground</h1>
+        <h1>🔗 CodeLab - Live Editor</h1>
         
-        <div class="editor-section">
-            <textarea id="codeEditor" placeholder="Enter your HTML, CSS & JS code here..."></textarea>
-            <div class="preview-box">
+        <div class="editor-container">
+            <textarea id="codeEditor" placeholder="Enter your HTML, CSS & JS here..."></textarea>
+            <div class="preview-container">
                 <iframe id="livePreview"></iframe>
             </div>
         </div>
 
         <div class="controls">
-            <button onclick="updatePreview()">🔁 Live Preview</button>
-            <button onclick="generateLink()">🔗 Get Short Link</button>
+            <button onclick="updatePreview()">▶️ Run Code</button>
+            <button onclick="generateLink()">🔗 Create Link</button>
             <button onclick="copyCode()">📋 Copy Code</button>
-            <button onclick="clearEditor()">❌ Clear</button>
         </div>
 
-        <div class="link-section">
-            <h3>Your Secure Share Link:</h3>
-            <div id="generatedLink">...</div>
-        </div>
-
-        <div class="footer">
-            <p>Generated links expire after 1 hour • <a href="#" style="color: var(--secondary);" onclick="showPrivacy()">Privacy Policy</a></p>
+        <div class="link-box">
+            <div id="generatedLink">Waiting for code...</div>
         </div>
     </div>
 
     <script>
-        // LZ-String Compression Library
-        <script src="https://cdn.jsdelivr.net/npm/lz-string@1.4.4/libs/lz-string.min.js"></script>
-
-        let linkExpiryTime = 3600000; // 1 hour in milliseconds
-
-        function showAd() {
-            return new Promise((resolve) => {
-                show_9117784().finally(resolve);
-            });
-        }
-
-        async function updatePreview() {
-            await showAd();
-            const code = document.getElementById('codeEditor').value;
-            const iframe = document.getElementById('livePreview');
-            iframe.srcdoc = code;
-        }
-
-        async function generateLink() {
-            await showAd();
-            const codeData = {
-                content: document.getElementById('codeEditor').value,
-                timestamp: Date.now()
-            };
-
-            const compressed = LZString.compressToEncodedURIComponent(JSON.stringify(codeData));
-            const baseURL = window.location.href.split('#')[0];
-            const shortLink = `${baseURL}#${compressed}`;
-
-            // Save to localStorage
-            localStorage.setItem(compressed, JSON.stringify(codeData));
-
-            document.getElementById('generatedLink').textContent = shortLink;
-            navigator.clipboard.writeText(shortLink);
-            alert('Secure link copied to clipboard!');
-        }
-
-        function copyCode() {
-            navigator.clipboard.writeText(document.getElementById('codeEditor').value);
-            alert('Code copied successfully!');
-        }
-
-        function clearEditor() {
-            document.getElementById('codeEditor').value = '';
-            updatePreview();
-        }
-
-        function loadContent() {
-            const hash = window.location.hash.substring(1);
-            if (!hash) return;
-
+        // Real-time Preview Function
+        function updatePreview() {
             try {
-                const decompressed = LZString.decompressFromEncodedURIComponent(hash);
-                const codeData = JSON.parse(decompressed);
-                
-                // Check expiry
-                if (Date.now() - codeData.timestamp > linkExpiryTime) {
-                    document.getElementById('generatedLink').textContent = '⚠️ Link Expired!';
-                    return;
-                }
-
-                document.getElementById('codeEditor').value = codeData.content;
-                updatePreview();
-
-            } catch (e) {
-                document.getElementById('generatedLink').textContent = '⚠️ Invalid Link!';
+                const code = document.getElementById('codeEditor').value;
+                const iframe = document.getElementById('livePreview');
+                const combinedCode = `
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <style>
+                            ${extractCSS(code)}
+                        </style>
+                    </head>
+                    <body>
+                        ${extractHTML(code)}
+                        <script>
+                            ${extractJS(code)}
+                        <\/script>
+                    </body>
+                    </html>
+                `;
+                iframe.srcdoc = combinedCode;
+            } catch(e) {
+                console.error('Preview Error:', e);
             }
         }
 
-        function showPrivacy() {
-            alert("Your code remains private and is never stored on our servers. All links automatically expire after 1 hour.");
+        // Code Parsing Functions
+        function extractHTML(code) {
+            return code.replace(/<style[\s\S]*?<\/style>/g, '')
+                      .replace(/<script[\s\S]*?<\/script>/g, '');
+        }
+
+        function extractCSS(code) {
+            const cssMatches = code.match(/<style[\s\S]*?<\/style>/g);
+            return cssMatches ? cssMatches.join('\n').replace(/<\/?style>/g, '') : '';
+        }
+
+        function extractJS(code) {
+            const jsMatches = code.match(/<script[\s\S]*?<\/script>/g);
+            return jsMatches ? jsMatches.join('\n').replace(/<\/?script>/g, '') : '';
+        }
+
+        // Link Generation
+        function generateLink() {
+            try {
+                const code = document.getElementById('codeEditor').value;
+                const compressed = LZString.compressToEncodedURIComponent(code);
+                const baseURL = window.location.href.split('#')[0];
+                const shareLink = `${baseURL}#${compressed}`;
+                
+                document.getElementById('generatedLink').textContent = shareLink;
+                navigator.clipboard.writeText(shareLink);
+                alert('Link copied to clipboard!');
+            } catch(e) {
+                console.error('Link Generation Error:', e);
+                alert('Error generating link!');
+            }
+        }
+
+        // Load from URL
+        function loadFromHash() {
+            try {
+                if(window.location.hash) {
+                    const compressed = window.location.hash.substring(1);
+                    const code = LZString.decompressFromEncodedURIComponent(compressed);
+                    document.getElementById('codeEditor').value = code;
+                    updatePreview();
+                }
+            } catch(e) {
+                console.error('Loading Error:', e);
+            }
         }
 
         // Initialize
         window.onload = () => {
-            loadContent();
-            setInterval(updatePreview, 5000);
+            loadFromHash();
+            document.getElementById('codeEditor').addEventListener('input', updatePreview);
         };
+
+        // Copy Function
+        function copyCode() {
+            navigator.clipboard.writeText(document.getElementById('codeEditor').value);
+            alert('Code copied!');
+        }
     </script>
 </body>
 </html>
