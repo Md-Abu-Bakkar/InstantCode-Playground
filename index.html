@@ -8,25 +8,211 @@
     <!-- Ad SDK Integration -->
     <script src='//whephiwums.com/sdk.js' data-zone='9117784' data-sdk='show_9117784'></script>
     
-    <!-- LZ-String Compression Library -->
-    <script src="https://cdn.jsdelivr.net/npm/lz-string@1.4.4/libs/lz-string.min.js"></script>
-    
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
     
     <style>
-        /* পূর্বের CSS একই থাকবে */
-        /* ... আপনার পুরোনো CSS কন্টেন্ট ... */
+        :root {
+            --primary: #00cf92;
+            --secondary: #2d2f3d;
+            --background: #1a1c25;
+            --text: #e4e6eb;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: var(--background);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            padding: 1.5rem;
+            background: var(--secondary);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .header h1 {
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 1.8rem;
+        }
+
+        .container {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .editor-container {
+            background: var(--secondary);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .editor-tabs {
+            display: flex;
+            background: #252733;
+            padding: 10px;
+        }
+
+        .tab {
+            padding: 8px 20px;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-right: 8px;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .code-editor {
+            height: 65vh;
+            background: #1e1f29;
+            padding: 15px;
+            font-family: 'Fira Code', monospace;
+            font-size: 14px;
+            border: none;
+            color: var(--text);
+            resize: none;
+            width: 100%;
+            tab-size: 4;
+        }
+
+        .preview-container {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .preview-iframe {
+            width: 100%;
+            height: 70vh;
+            border: none;
+        }
+
+        .control-bar {
+            display: flex;
+            gap: 10px;
+            padding: 15px;
+            background: var(--secondary);
+        }
+
+        .btn {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #3b3d4d;
+            color: var(--text);
+        }
+
+        .link-container {
+            padding: 15px;
+            background: var(--secondary);
+            margin: 20px;
+            border-radius: 8px;
+        }
+
+        .generated-link {
+            word-break: break-all;
+            background: #2d2f3d;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-family: 'Fira Code', monospace;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 15px;
+            background: var(--secondary);
+            margin-top: auto;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            
+            .code-editor {
+                height: 50vh;
+            }
+        }
     </style>
 </head>
 <body>
-    <!-- পূর্বের HTML স্ট্রাকচার একই থাকবে -->
-    <!-- ... আপনার পুরোনো HTML কন্টেন্ট ... -->
+    <header class="header">
+        <h1>LiveCode Pro</h1>
+    </header>
+
+    <div class="container">
+        <div class="editor-container">
+            <div class="editor-tabs">
+                <div class="tab active" onclick="switchTab('html')">HTML</div>
+                <div class="tab" onclick="switchTab('css')">CSS</div>
+                <div class="tab" onclick="switchTab('js')">JS</div>
+            </div>
+            <textarea class="code-editor" id="htmlEditor" spellcheck="false"></textarea>
+            <textarea class="code-editor" id="cssEditor" spellcheck="false" style="display: none;"></textarea>
+            <textarea class="code-editor" id="jsEditor" spellcheck="false" style="display: none;"></textarea>
+        </div>
+
+        <div class="preview-container">
+            <iframe class="preview-iframe" id="preview"></iframe>
+            <div class="control-bar">
+                <button class="btn btn-primary" onclick="updatePreview()">▶️ Run Code</button>
+                <button class="btn btn-secondary" onclick="copyCode()">📋 Copy Code</button>
+                <button class="btn btn-primary" onclick="generateLink()">🔗 Generate Link</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="link-container">
+        <h3>Generated Share Link:</h3>
+        <div class="generated-link" id="generatedLink">No link generated yet</div>
+    </div>
+
+    <footer class="footer">
+        <p>© 2024 LiveCode Pro | 
+            <a href="#" style="color: var(--primary);" onclick="showPrivacyPolicy()">Privacy Policy</a>
+        </p>
+    </footer>
 
     <script>
+        // LZ-String Compression Library
+        <script src="https://cdn.jsdelivr.net/npm/lz-string@1.4.4/libs/lz-string.min.js"></script>
+
         let currentTab = 'html';
 
-        // ট্যাব সুইচিং ফাংশন
         function switchTab(tab) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.code-editor').forEach(editor => editor.style.display = 'none');
@@ -36,74 +222,70 @@
             document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
         }
 
-        // প্রিভিউ আপডেট ফাংশন
         function updatePreview() {
-            try {
-                const html = document.getElementById('htmlEditor').value;
-                const css = `<style>${document.getElementById('cssEditor').value}</style>`;
-                const js = `<script>${document.getElementById('jsEditor').value}<\/script>`;
-                
-                const iframe = document.getElementById('preview');
-                iframe.srcdoc = html + css + js;
-            } catch(e) {
-                console.error('Preview Error:', e);
-            }
+            const html = document.getElementById('htmlEditor').value;
+            const css = `<style>${document.getElementById('cssEditor').value}</style>`;
+            const js = `<script>${document.getElementById('jsEditor').value}<\/script>`;
+            
+            const iframe = document.getElementById('preview');
+            iframe.srcdoc = html + css + js;
         }
 
-        // লিংক জেনারেশন ফাংশন
         function generateLink() {
-            try {
-                const codeData = {
-                    html: document.getElementById('htmlEditor').value,
-                    css: document.getElementById('cssEditor').value,
-                    js: document.getElementById('jsEditor').value
-                };
+            const codeData = {
+                html: document.getElementById('htmlEditor').value,
+                css: document.getElementById('cssEditor').value,
+                js: document.getElementById('jsEditor').value
+            };
 
-                const compressed = LZString.compressToBase64(JSON.stringify(codeData));
-                const link = `${window.location.origin}${window.location.pathname}#${compressed}`;
-                
-                document.getElementById('generatedLink').textContent = link;
-                showAd();
-                return link;
-            } catch(e) {
-                console.error('Link Generation Error:', e);
-                alert('Error generating link!');
-            }
+            const compressed = LZString.compressToBase64(JSON.stringify(codeData));
+            const link = `${window.location.origin}${window.location.pathname}#${compressed}`;
+            
+            document.getElementById('generatedLink').textContent = link;
+            showAd();
+            return link;
         }
 
-        // লোড ফ্রম URL হ্যাশ
+        function copyCode() {
+            const code = document.getElementById(`${currentTab}Editor`).value;
+            navigator.clipboard.writeText(code);
+            alert('Code copied to clipboard!');
+        }
+
         function loadFromHash() {
-            try {
-                if(window.location.hash) {
+            if(window.location.hash) {
+                try {
                     const decompressed = LZString.decompressFromBase64(window.location.hash.substring(1));
                     const codeData = JSON.parse(decompressed);
                     
-                    document.getElementById('htmlEditor').value = codeData.html || '';
-                    document.getElementById('cssEditor').value = codeData.css || '';
-                    document.getElementById('jsEditor').value = codeData.js || '';
+                    document.getElementById('htmlEditor').value = codeData.html;
+                    document.getElementById('cssEditor').value = codeData.css;
+                    document.getElementById('jsEditor').value = codeData.js;
                     
                     updatePreview();
+                } catch(e) {
+                    console.error('Error loading code:', e);
                 }
-            } catch(e) {
-                console.error('Loading Error:', e);
             }
         }
 
-        // ইনিশিয়ালাইজেশন
-        window.addEventListener('DOMContentLoaded', () => {
+        // Initialize
+        window.onload = () => {
             loadFromHash();
-            document.getElementById('htmlEditor').addEventListener('input', updatePreview);
-            document.getElementById('cssEditor').addEventListener('input', updatePreview);
-            document.getElementById('jsEditor').addEventListener('input', updatePreview);
-        });
+            setInterval(updatePreview, 2000);
+        };
 
-        // অ্যাড ম্যানেজমেন্ট
+        // Ad Management
         function showAd() {
-            try {
-                show_9117784().catch(() => {});
-            } catch(e) {
-                console.warn('Ad Error:', e);
-            }
+            show_9117784().then(() => {
+                console.log('Ad completed');
+            }).catch(() => {
+                console.log('Ad skipped');
+            });
+        }
+
+        function showPrivacyPolicy() {
+            alert('Privacy Policy: We value your privacy. All code remains in your browser and is never stored on our servers.');
         }
     </script>
 </body>
