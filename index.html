@@ -15,86 +15,7 @@
             --editor-bg: #2d2d2d;
         }
 
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background: var(--background);
-            color: white;
-            margin: 0;
-            padding: 20px;
-            min-height: 100vh;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .editor-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            height: 70vh;
-        }
-
-        textarea {
-            width: 100%;
-            height: 100%;
-            background: var(--editor-bg);
-            color: white;
-            border: 2px solid #3d3d3d;
-            padding: 15px;
-            border-radius: 8px;
-            resize: none;
-            font-family: 'Fira Code', monospace;
-            font-size: 14px;
-        }
-
-        .preview-container {
-            background: white;
-            border-radius: 8px;
-            overflow: hidden;
-            position: relative;
-        }
-
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-
-        .controls {
-            margin-top: 20px;
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-        }
-
-        button {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: opacity 0.3s;
-        }
-
-        button:hover {
-            opacity: 0.9;
-        }
-
-        .link-box {
-            margin-top: 20px;
-            padding: 15px;
-            background: var(--editor-bg);
-            border-radius: 8px;
-            text-align: center;
-        }
-
-        #generatedLink {
-            color: var(--primary);
-            word-break: break-all;
-        }
+        /* ... পূর্বের CSS অপরিবর্তিত ... */
     </style>
 </head>
 <body>
@@ -104,93 +25,58 @@
         <div class="editor-container">
             <textarea id="codeEditor" placeholder="Enter your HTML, CSS & JS here..."></textarea>
             <div class="preview-container">
-                <iframe id="livePreview"></iframe>
+                <iframe 
+                    id="livePreview" 
+                    sandbox="allow-scripts allow-modals allow-forms allow-same-origin"
+                ></iframe>
             </div>
         </div>
 
-        <div class="controls">
-            <button onclick="updatePreview()">▶️ Run Code</button>
-            <button onclick="generateLink()">🔗 Create Link</button>
-            <button onclick="copyCode()">📋 Copy Code</button>
-        </div>
-
-        <div class="link-box">
-            <div id="generatedLink">Waiting for code...</div>
-        </div>
+        <!-- ... বাকি HTML অপরিবর্তিত ... -->
     </div>
 
     <script>
-        // Real-time Preview Function
+        // Updated Preview Function
         function updatePreview() {
             try {
                 const code = document.getElementById('codeEditor').value;
                 const iframe = document.getElementById('livePreview');
-                const combinedCode = `
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <style>
-                            ${extractCSS(code)}
-                        </style>
-                    </head>
-                    <body>
-                        ${extractHTML(code)}
-                        <script>
-                            ${extractJS(code)}
-                        <\/script>
-                    </body>
-                    </html>
-                `;
-                iframe.srcdoc = combinedCode;
+                const blob = new Blob([code], {type: 'text/html'});
+                const url = URL.createObjectURL(blob);
+                iframe.src = url;
             } catch(e) {
                 console.error('Preview Error:', e);
             }
         }
 
-        // Code Parsing Functions
-        function extractHTML(code) {
-            return code.replace(/<style[\s\S]*?<\/style>/g, '')
-                      .replace(/<script[\s\S]*?<\/script>/g, '');
-        }
-
-        function extractCSS(code) {
-            const cssMatches = code.match(/<style[\s\S]*?<\/style>/g);
-            return cssMatches ? cssMatches.join('\n').replace(/<\/?style>/g, '') : '';
-        }
-
-        function extractJS(code) {
-            const jsMatches = code.match(/<script[\s\S]*?<\/script>/g);
-            return jsMatches ? jsMatches.join('\n').replace(/<\/?script>/g, '') : '';
-        }
-
-        // Link Generation
+        // Fixed Link Generation
         function generateLink() {
             try {
                 const code = document.getElementById('codeEditor').value;
-                const compressed = LZString.compressToEncodedURIComponent(code);
+                const compressed = LZString.compressToEncodedURIComponent(encodeURIComponent(code));
                 const baseURL = window.location.href.split('#')[0];
                 const shareLink = `${baseURL}#${compressed}`;
                 
                 document.getElementById('generatedLink').textContent = shareLink;
                 navigator.clipboard.writeText(shareLink);
-                alert('Link copied to clipboard!');
+                alert('Link copied!');
             } catch(e) {
-                console.error('Link Generation Error:', e);
-                alert('Error generating link!');
+                console.error('Link Error:', e);
             }
         }
 
-        // Load from URL
+        // Fixed Load Function
         function loadFromHash() {
             try {
                 if(window.location.hash) {
                     const compressed = window.location.hash.substring(1);
-                    const code = LZString.decompressFromEncodedURIComponent(compressed);
+                    const decoded = LZString.decompressFromEncodedURIComponent(compressed);
+                    const code = decodeURIComponent(decoded);
                     document.getElementById('codeEditor').value = code;
                     updatePreview();
                 }
             } catch(e) {
-                console.error('Loading Error:', e);
+                console.error('Load Error:', e);
             }
         }
 
@@ -199,12 +85,6 @@
             loadFromHash();
             document.getElementById('codeEditor').addEventListener('input', updatePreview);
         };
-
-        // Copy Function
-        function copyCode() {
-            navigator.clipboard.writeText(document.getElementById('codeEditor').value);
-            alert('Code copied!');
-        }
     </script>
 </body>
 </html>
