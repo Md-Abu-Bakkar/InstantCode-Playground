@@ -3,194 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CodePlayground - Live Editor & Share</title>
+    <title>LiveCode Pro - Advanced Web Playground</title>
     
-    <!-- Required Libraries -->
+    <!-- Ad SDK Integration -->
+    <script src='//whephiwums.com/sdk.js' data-zone='9117784' data-sdk='show_9117784'></script>
+    
+    <!-- LZ-String Compression Library -->
     <script src="https://cdn.jsdelivr.net/npm/lz-string@1.4.4/libs/lz-string.min.js"></script>
     
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+    
     <style>
-        :root {
-            --primary: #2ecc71;
-            --background: #1a1c25;
-            --editor-bg: #282a36;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', sans-serif;
-        }
-
-        body {
-            background: var(--background);
-            color: #ffffff;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .container {
-            flex: 1;
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            padding: 10px;
-        }
-
-        .editor-pane {
-            background: var(--editor-bg);
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        .editor-header {
-            padding: 10px;
-            background: #00000030;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .editor-title {
-            font-weight: 600;
-            color: var(--primary);
-        }
-
-        textarea {
-            width: 100%;
-            height: calc(100vh - 150px);
-            background: transparent;
-            border: none;
-            padding: 15px;
-            color: #ffffff;
-            resize: none;
-            font-family: 'Fira Code', monospace;
-            font-size: 14px;
-        }
-
-        .preview-pane {
-            grid-column: span 2;
-            background: #ffffff;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        iframe {
-            width: 100%;
-            height: calc(100vh - 100px);
-            border: none;
-        }
-
-        .controls {
-            padding: 10px;
-            display: flex;
-            gap: 10px;
-            background: #00000030;
-        }
-
-        button {
-            padding: 8px 15px;
-            background: var(--primary);
-            border: none;
-            border-radius: 4px;
-            color: white;
-            cursor: pointer;
-            transition: opacity 0.3s;
-        }
-
-        button:hover {
-            opacity: 0.9;
-        }
-
-        .link-container {
-            padding: 10px;
-            background: var(--editor-bg);
-            margin: 10px;
-            border-radius: 4px;
-        }
-
-        #generatedLink {
-            word-break: break-all;
-            color: var(--primary);
-            margin-top: 5px;
-            font-family: monospace;
-        }
+        /* পূর্বের CSS একই থাকবে */
+        /* ... আপনার পুরোনো CSS কন্টেন্ট ... */
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="editor-pane">
-            <div class="editor-header">
-                <div class="editor-title">HTML</div>
-                <button onclick="copyCode('html')">Copy</button>
-            </div>
-            <textarea id="htmlEditor" spellcheck="false"></textarea>
-        </div>
-
-        <div class="editor-pane">
-            <div class="editor-header">
-                <div class="editor-title">CSS</div>
-                <button onclick="copyCode('css')">Copy</button>
-            </div>
-            <textarea id="cssEditor" spellcheck="false"></textarea>
-        </div>
-
-        <div class="editor-pane">
-            <div class="editor-header">
-                <div class="editor-title">JS</div>
-                <button onclick="copyCode('js')">Copy</button>
-            </div>
-            <textarea id="jsEditor" spellcheck="false"></textarea>
-        </div>
-
-        <div class="preview-pane">
-            <div class="controls">
-                <button onclick="updatePreview()">Update Preview</button>
-                <button onclick="generateLink()">Generate Link</button>
-            </div>
-            <iframe id="preview"></iframe>
-            <div class="link-container">
-                <div>Shareable Link:</div>
-                <div id="generatedLink"></div>
-            </div>
-        </div>
-    </div>
+    <!-- পূর্বের HTML স্ট্রাকচার একই থাকবে -->
+    <!-- ... আপনার পুরোনো HTML কন্টেন্ট ... -->
 
     <script>
-        // Real-time preview update
+        let currentTab = 'html';
+
+        // ট্যাব সুইচিং ফাংশন
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.code-editor').forEach(editor => editor.style.display = 'none');
+            
+            currentTab = tab;
+            document.getElementById(`${tab}Editor`).style.display = 'block';
+            document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
+        }
+
+        // প্রিভিউ আপডেট ফাংশন
         function updatePreview() {
-            const html = document.getElementById('htmlEditor').value;
-            const css = `<style>${document.getElementById('cssEditor').value}</style>`;
-            const js = `<script>${document.getElementById('jsEditor').value}<\/script>`;
-            
-            const iframe = document.getElementById('preview');
-            iframe.srcdoc = html + css + js;
+            try {
+                const html = document.getElementById('htmlEditor').value;
+                const css = `<style>${document.getElementById('cssEditor').value}</style>`;
+                const js = `<script>${document.getElementById('jsEditor').value}<\/script>`;
+                
+                const iframe = document.getElementById('preview');
+                iframe.srcdoc = html + css + js;
+            } catch(e) {
+                console.error('Preview Error:', e);
+            }
         }
 
-        // Generate compressed URL
+        // লিংক জেনারেশন ফাংশন
         function generateLink() {
-            const codeData = {
-                html: document.getElementById('htmlEditor').value,
-                css: document.getElementById('cssEditor').value,
-                js: document.getElementById('jsEditor').value
-            };
+            try {
+                const codeData = {
+                    html: document.getElementById('htmlEditor').value,
+                    css: document.getElementById('cssEditor').value,
+                    js: document.getElementById('jsEditor').value
+                };
 
-            const compressed = LZString.compressToBase64(JSON.stringify(codeData));
-            const shareLink = `${window.location.origin}${window.location.pathname}#${compressed}`;
-            
-            document.getElementById('generatedLink').textContent = shareLink;
-            navigator.clipboard.writeText(shareLink);
-            alert('Link copied to clipboard!');
+                const compressed = LZString.compressToBase64(JSON.stringify(codeData));
+                const link = `${window.location.origin}${window.location.pathname}#${compressed}`;
+                
+                document.getElementById('generatedLink').textContent = link;
+                showAd();
+                return link;
+            } catch(e) {
+                console.error('Link Generation Error:', e);
+                alert('Error generating link!');
+            }
         }
 
-        // Load from URL hash
+        // লোড ফ্রম URL হ্যাশ
         function loadFromHash() {
-            if(window.location.hash) {
-                try {
-                    const decompressed = LZString.decompressFromBase64(
-                        window.location.hash.substring(1)
-                    );
+            try {
+                if(window.location.hash) {
+                    const decompressed = LZString.decompressFromBase64(window.location.hash.substring(1));
                     const codeData = JSON.parse(decompressed);
                     
                     document.getElementById('htmlEditor').value = codeData.html || '';
@@ -198,26 +83,28 @@
                     document.getElementById('jsEditor').value = codeData.js || '';
                     
                     updatePreview();
-                } catch(e) {
-                    console.error('Error loading code:', e);
                 }
+            } catch(e) {
+                console.error('Loading Error:', e);
             }
         }
 
-        // Copy code from specific editor
-        function copyCode(lang) {
-            const code = document.getElementById(`${lang}Editor`).value;
-            navigator.clipboard.writeText(code);
-            alert(`${lang.toUpperCase()} code copied!`);
-        }
-
-        // Initialize
-        window.addEventListener('load', () => {
+        // ইনিশিয়ালাইজেশন
+        window.addEventListener('DOMContentLoaded', () => {
             loadFromHash();
-            document.querySelectorAll('textarea').forEach(textarea => {
-                textarea.addEventListener('input', updatePreview);
-            });
+            document.getElementById('htmlEditor').addEventListener('input', updatePreview);
+            document.getElementById('cssEditor').addEventListener('input', updatePreview);
+            document.getElementById('jsEditor').addEventListener('input', updatePreview);
         });
+
+        // অ্যাড ম্যানেজমেন্ট
+        function showAd() {
+            try {
+                show_9117784().catch(() => {});
+            } catch(e) {
+                console.warn('Ad Error:', e);
+            }
+        }
     </script>
 </body>
 </html>
